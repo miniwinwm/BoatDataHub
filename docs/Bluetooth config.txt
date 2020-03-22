@@ -1,0 +1,42 @@
+Setting the Bluetooth module baud rate
+--------------------------------------
+
+Method 1 - module not in place on PCB
+
+Connect USB to TTL cable to bluetooth module - yellow to TXD, orange to RXD and power and ground.
+Power up bluetooth module with its button held down
+Connect terminal at 38400,0,0
+Type AT+UART=38400,0,0<CTRL-M><CTRL-J> to set baud rate
+Type AT+UART=? <CTRL-M><CTRL-J> to check baud rate set
+
+Method 2 - module in place on PCB
+
+To set this in the boat data hub hold down the top button and the Bluetooth modules's button
+when powering up. Then let the buttons go, wait for message on LCD to power cycle and power off/on.
+
+
+Pairing device in Windows 10
+----------------------------
+
+In Windows 10 to switch on bluetooth...
+
+Settings|PC Settings
+Bluetooth slide to On
+
+To pair to device via PC Settings...
+
+Click Add Bluetooth or other device
+Click Bluetooth
+Click HC05
+Enter 1234
+
+In Windows 10 to pair to the bluetooth module via Control Panel...
+
+Switch on device - module button does not need pressing
+Control panel
+Hardware and Sound|View devices and Printers
+Add a device
+Choose HC-05
+Enter PIN 1234
+This adds 2 COM ports. Use device manager to find their numbers. Try each in turn in OpenCPN at 38400,0,0.
+

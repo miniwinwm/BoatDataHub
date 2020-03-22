@@ -1,0 +1,7 @@
+/wl_autopilot_remote.hex
+/nrf24l01.o
+/spi1.o
+/wl_autopilot_remote.cof
+/wl_autopilot_remote.map
+/wl_autopilot_remote.o
+wl_autopilot_remote.mcs

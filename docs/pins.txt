@@ -1,0 +1,32 @@
+PA0		GPIO		LCD D6	
+PA1		GPIO		LCD D5	
+PA2		GPIO		LCD D4
+PA3		UART2		AIS R
+PA4		GPIO		Seatalk T
+PA5		GPIO		Seatalk R
+PA6		TIM3 PWM	Buzzer
+PA7		GPIO		LCD RW
+PA8		GPIO		LCD RS
+PA9		UART1		Bluetooth T
+PA10	UART1		Bluetooth R
+PA11	TIM1 PWM	Backlight
+PA12	EXTI		Button 1
+PA15	EXTI		Button 2
+PB0		GPIO		LCD E	
+PB1		GPIO		Mouse power
+PB3		(JTAG)		Can be reassigned
+PB4		(JTAG)		Can be reassigned
+PB5		GPIO		EEPROM CS
+PB6		I2C1		Pressure sensor SCL
+PB7		I2C1		Pressure sensor SDA
+PB8		GPIO		RF module IRQ
+PB9		EXTI		RF module CE
+PB10	UART3		VHF T
+PB11	UART3		Mouse R
+PB12	GPIO		RF Module CSN
+PB13	SPI2		CLK
+PB14	SPI2		MISO
+PB15	SPI2		MOSI
+PC13	GPIO		LCD D7
+PC14	OSC32_IN	Eternal crystal
+PC15	OSC32_OUT	Eternal crystal
