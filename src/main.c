@@ -750,7 +750,7 @@ static void VLW_transmit_callback(void)
 		nmea_message_data_VLW.data_available |= NMEA_VLW_TRIP_WATER_DISTANCE_PRESENT;
 	}
 
-	if (time_ms - boat_data_reception_time.heading_magnetic_received_time < LOG_MAX_DATA_AGE_MS)
+	if (time_ms - boat_data_reception_time.log_received_time < LOG_MAX_DATA_AGE_MS)
 	{
 		nmea_message_data_VLW.total_water_distance = seatalk_log_data_retrieve();
 		nmea_message_data_VLW.data_available |= NMEA_VLW_TOTAL_WATER_DISTANCE_PRESENT;
@@ -822,11 +822,7 @@ static const transmit_message_details_t nmea_transmit_message_details_HDT = { nm
 
 static void HDT_transmit_callback(void)
 {
-	if (timer_get_time_ms() - boat_data_reception_time.heading_magnetic_received_time < HEADING_MAGNETIC_MAX_DATA_AGE_MS)
-	{
-		nmea_message_data_HDT.true_heading = (float)seatalk_heading_magnetic_retrieve() + variation_wmm_data;
-	}
-
+	nmea_message_data_HDT.true_heading = (float)seatalk_heading_magnetic_retrieve() + variation_wmm_data;
 	nmea_message_data_HDT.data_available |= NMEA_HDT_TRUE_HEADING_PRESENT;
 }
 
@@ -1164,39 +1160,6 @@ static void vTimerCallback10s(TimerHandle_t xTimer)
     	boat_data_reception_time.pressure_received_time = time_ms;
     }
 
-	if (time_ms - boat_data_reception_time.arrival_circle_entered_received_time < ARRIVAL_CIRCLE_ENTERED_DATA_MAG_AGE_MS &&
-			time_ms - boat_data_reception_time.perpendicular_passed_received_time < PERPENDICULAR_PASSED_MAX_DATA_AGE_MS &&
-			time_ms - boat_data_reception_time.waypoint_id_received_time < WAYPOINT_ID_MAX_DATA_AGE_MS)
-	{
-		seatalk_arrival_info_send(waypoint_id_data, arrival_circle_entered_data, perpendicular_passed_data);
-	}
-
-	if (time_ms - boat_data_reception_time.waypoint_id_received_time < WAYPOINT_ID_MAX_DATA_AGE_MS)
-	{
-		seatalk_target_waypoint_id_send(waypoint_id_data);
-	}
-
-	if (time_ms - boat_data_reception_time.cross_track_error_received_time < CROSS_TRACK_ERROR_MAX_DATA_AGE_MS &&
-			time_ms - boat_data_reception_time.bearing_to_destination_magnetic_received_time < BEARING_TO_DESTINATION_MAX_DATA_AGE_MS &&
-			time_ms - boat_data_reception_time.range_to_destination_received_time < DISTANCE_TO_DESTINATION_MAX_DATA_AGE_MS &&
-			time_ms - boat_data_reception_time.direction_to_steer_received_time < DIRECTION_TO_STEER_MAX_DATA_AGE_MS)
-	{
-		seatalk_navigate_to_waypoint_info_send(cross_track_error_data,
-				range_to_destination_data,
-				bearing_to_destination_magnetic_data,
-				direction_to_steer_data);
-	}
-	else if (time_ms - boat_data_reception_time.cross_track_error_received_time < CROSS_TRACK_ERROR_MAX_DATA_AGE_MS &&
-				time_ms - boat_data_reception_time.bearing_to_destination_true_received_time < BEARING_TO_DESTINATION_MAX_DATA_AGE_MS &&
-				time_ms - boat_data_reception_time.range_to_destination_received_time < DISTANCE_TO_DESTINATION_MAX_DATA_AGE_MS &&
-				time_ms - boat_data_reception_time.direction_to_steer_received_time < DIRECTION_TO_STEER_MAX_DATA_AGE_MS)
-	{
-		seatalk_navigate_to_waypoint_info_send(cross_track_error_data,
-				range_to_destination_data,
-				bearing_to_destination_true_data - (int16_t)variation_wmm_data ,
-				direction_to_steer_data);
-	}
-
 	if (time_ms - boat_data_reception_time.wmm_calculation_time > WMM_CALCULATION_MAX_DATA_AGE &&
 			time_ms - boat_data_reception_time.latitude_received_time < LATITUDE_MAX_DATA_AGE_MS &&
 			time_ms - boat_data_reception_time.longitude_received_time < LONGITUDE_MAX_DATA_AGE_MS &&
@@ -1281,6 +1244,41 @@ static void vTimerCallback1s(TimerHandle_t xTimer)
     		seatalk_course_over_ground_send(course_over_ground_dual_source_data);
     	}
     }
+
+    // send target waypoint id to seatalk
+	if (time_ms - boat_data_reception_time.waypoint_id_received_time < WAYPOINT_ID_MAX_DATA_AGE_MS)
+	{
+		seatalk_target_waypoint_id_send(waypoint_id_data);
+
+	    // send perpendicular passed info to seatalk
+		if (time_ms - boat_data_reception_time.arrival_circle_entered_received_time < ARRIVAL_CIRCLE_ENTERED_DATA_MAG_AGE_MS &&
+				time_ms - boat_data_reception_time.perpendicular_passed_received_time < PERPENDICULAR_PASSED_MAX_DATA_AGE_MS)
+		{
+			seatalk_arrival_info_send(waypoint_id_data, arrival_circle_entered_data, perpendicular_passed_data);
+		}
+	}
+
+    // send navigate to waypoint info to seatalk
+	if (time_ms - boat_data_reception_time.cross_track_error_received_time < CROSS_TRACK_ERROR_MAX_DATA_AGE_MS &&
+			time_ms - boat_data_reception_time.bearing_to_destination_magnetic_received_time < BEARING_TO_DESTINATION_MAX_DATA_AGE_MS &&
+			time_ms - boat_data_reception_time.range_to_destination_received_time < DISTANCE_TO_DESTINATION_MAX_DATA_AGE_MS &&
+			time_ms - boat_data_reception_time.direction_to_steer_received_time < DIRECTION_TO_STEER_MAX_DATA_AGE_MS)
+	{
+		seatalk_navigate_to_waypoint_info_send(cross_track_error_data,
+				range_to_destination_data,
+				bearing_to_destination_magnetic_data,
+				direction_to_steer_data);
+	}
+	else if (time_ms - boat_data_reception_time.cross_track_error_received_time < CROSS_TRACK_ERROR_MAX_DATA_AGE_MS &&
+				time_ms - boat_data_reception_time.bearing_to_destination_true_received_time < BEARING_TO_DESTINATION_MAX_DATA_AGE_MS &&
+				time_ms - boat_data_reception_time.range_to_destination_received_time < DISTANCE_TO_DESTINATION_MAX_DATA_AGE_MS &&
+				time_ms - boat_data_reception_time.direction_to_steer_received_time < DIRECTION_TO_STEER_MAX_DATA_AGE_MS)
+	{
+		seatalk_navigate_to_waypoint_info_send(cross_track_error_data,
+				range_to_destination_data,
+				bearing_to_destination_true_data - (int16_t)variation_wmm_data ,
+				direction_to_steer_data);
+	}
 
     // switch on or off RMC message transmission here
 	if (time_ms - boat_data_reception_time.gmt_received_time < GMT_MAX_DATA_AGE_MS &&
@@ -1389,23 +1387,23 @@ static void vTimerCallback1s(TimerHandle_t xTimer)
 		nmea_disable_transmit_message(PORT_BLUETOOTH, nmea_message_MWV);
 	}
 
-    // switch on or off HDM message transmission here
+    // switch on or off HDM/HDT message transmission here
 	if (time_ms - boat_data_reception_time.heading_magnetic_received_time < HEADING_MAGNETIC_MAX_DATA_AGE_MS)
 	{
 		nmea_enable_transmit_message(&nmea_transmit_message_details_HDM);
+
+		if (time_ms - boat_data_reception_time.wmm_calculation_time < WMM_CALCULATION_MAX_DATA_AGE)
+		{
+			nmea_enable_transmit_message(&nmea_transmit_message_details_HDT);
+		}
+		else
+		{
+			nmea_disable_transmit_message(PORT_BLUETOOTH, nmea_message_HDT);
+		}
 	}
 	else
 	{
 		nmea_disable_transmit_message(PORT_BLUETOOTH, nmea_message_HDM);
-	}
-
-    // switch on or off HDT message transmission here
-	if (time_ms - boat_data_reception_time.heading_magnetic_received_time < HEADING_MAGNETIC_MAX_DATA_AGE_MS)
-	{
-		nmea_enable_transmit_message(&nmea_transmit_message_details_HDT);
-	}
-	else
-	{
 		nmea_disable_transmit_message(PORT_BLUETOOTH, nmea_message_HDT);
 	}
 }

@@ -498,14 +498,12 @@ void seatalk_target_waypoint_id_send(char *waypoint_id_data)
 {
 	uint8_t next_character;
 
-	seatalk_sentence[0] = 0x82U;
+	seatalk_sentence[0] = SEATALK_WAYPOINT_ID;
 	seatalk_sentence[1] = 0x05U;
-	seatalk_sentence[2] = 0x00U;
-	seatalk_sentence[4] = 0x00U;
-	seatalk_sentence[6] = 0x00U;
+	memset(seatalk_sentence + 2, 0U, (size_t)5);
 
 	//character 1
-	next_character = waypoint_id_data[0];
+	next_character = toupper(waypoint_id_data[0]);
 	if (next_character == '\0')
 	{
 		next_character = '0';
@@ -514,7 +512,7 @@ void seatalk_target_waypoint_id_send(char *waypoint_id_data)
 	seatalk_sentence[2] |= next_character & 0x3fU;
 
 	//character 2
-	next_character = waypoint_id_data[1];
+	next_character = toupper(waypoint_id_data[1]);
 	if (next_character == '\0')
 	{
 		next_character = '0';
@@ -524,7 +522,7 @@ void seatalk_target_waypoint_id_send(char *waypoint_id_data)
 	seatalk_sentence[4] |= next_character >> 2;
 
 	//character 3
-	next_character = waypoint_id_data[2];
+	next_character = toupper(waypoint_id_data[2]);
 	if (next_character == '\0')
 	{
 		next_character = '0';
@@ -534,7 +532,7 @@ void seatalk_target_waypoint_id_send(char *waypoint_id_data)
 	seatalk_sentence[6] |= next_character >> 4;
 
 	// char 4
-	next_character = waypoint_id_data[3];
+	next_character = toupper(waypoint_id_data[3]);
 	if (next_character == '\0')
 	{
 		next_character = '0';
@@ -559,7 +557,7 @@ void seatalk_navigate_to_waypoint_info_send(float cross_track_error_data,
 	uint16_t seatalk_distance_to_destination;
 
 	// byte 0 - 0x85
-	seatalk_sentence[0] = 0x85U;
+	seatalk_sentence[0] = SEATALK_NAV_TO_WAYPOINT_INFO;
 
 	// byte 1 - X6
 	seatalk_cross_track_error = (uint16_t)(cross_track_error_data * 100.0f);
@@ -640,7 +638,7 @@ void seatalk_arrival_info_send(char *waypoint_id_data, bool arrival_circle_enter
 	uint8_t i;
 	bool end_reached = false;
 
-	seatalk_sentence[0] = 0xa2U;
+	seatalk_sentence[0] = SEATALK_ARRIVAL_INFO;
 	byte = 0x04U;
 	if (arrival_circle_entered_data)
 	{
@@ -695,7 +693,7 @@ void seatalk_speed_over_ground_send(float sog)
 	uint16_t sog_int;
 
 	// byte 0 - 0x52
-	seatalk_sentence[0] = 0x52U;
+	seatalk_sentence[0] = SEATALK_SOG;
 	seatalk_sentence[1] = 0x01U;
 
 	sog_int = (uint16_t)(sog *= 10.0f);
@@ -712,7 +710,7 @@ void seatalk_course_over_ground_send(float cog)
 	float remainder_2;
 
 	// byte 0 - 0x53
-	seatalk_sentence[0] = 0x53U;
+	seatalk_sentence[0] = SEATALK_COG;
 
 	quadrant = (uint8_t)(cog / 90.0f);
 	seatalk_sentence[1] = (uint8_t)quadrant << 4;
