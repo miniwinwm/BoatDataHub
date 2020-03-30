@@ -718,13 +718,8 @@ static const transmit_message_details_t nmea_transmit_message_details_VHW = { nm
 
 static void VHW_transmit_callback(void)
 {
-	nmea_message_data_VHW.data_available = 0UL;
-
-	if (timer_get_time_ms() - boat_data_reception_time.boat_speed_received_time < BOAT_SPEED_MAX_DATA_AGE_MS)
-	{
-		nmea_message_data_VHW.water_speed_knots = seatalk_boat_speed_data_retrieve();
-		nmea_message_data_VHW.data_available |= NMEA_VHW_WATER_SPEED_KTS_PRESENT;
-	}
+	nmea_message_data_VHW.water_speed_knots = seatalk_boat_speed_data_retrieve();
+	nmea_message_data_VHW.data_available = NMEA_VHW_WATER_SPEED_KTS_PRESENT;
 }
 
 /* MTW transmit to OpenCPN */
@@ -823,7 +818,7 @@ static const transmit_message_details_t nmea_transmit_message_details_HDT = { nm
 static void HDT_transmit_callback(void)
 {
 	nmea_message_data_HDT.true_heading = (float)seatalk_heading_magnetic_retrieve() + variation_wmm_data;
-	nmea_message_data_HDT.data_available |= NMEA_HDT_TRUE_HEADING_PRESENT;
+	nmea_message_data_HDT.data_available = NMEA_HDT_TRUE_HEADING_PRESENT;
 }
 
 /* GGA transmit to OpenCPN */
@@ -1260,24 +1255,33 @@ static void vTimerCallback1s(TimerHandle_t xTimer)
 
     // send navigate to waypoint info to seatalk
 	if (time_ms - boat_data_reception_time.cross_track_error_received_time < CROSS_TRACK_ERROR_MAX_DATA_AGE_MS &&
-			time_ms - boat_data_reception_time.bearing_to_destination_magnetic_received_time < BEARING_TO_DESTINATION_MAX_DATA_AGE_MS &&
 			time_ms - boat_data_reception_time.range_to_destination_received_time < DISTANCE_TO_DESTINATION_MAX_DATA_AGE_MS &&
 			time_ms - boat_data_reception_time.direction_to_steer_received_time < DIRECTION_TO_STEER_MAX_DATA_AGE_MS)
 	{
-		seatalk_navigate_to_waypoint_info_send(cross_track_error_data,
-				range_to_destination_data,
-				bearing_to_destination_magnetic_data,
-				direction_to_steer_data);
-	}
-	else if (time_ms - boat_data_reception_time.cross_track_error_received_time < CROSS_TRACK_ERROR_MAX_DATA_AGE_MS &&
-				time_ms - boat_data_reception_time.bearing_to_destination_true_received_time < BEARING_TO_DESTINATION_MAX_DATA_AGE_MS &&
-				time_ms - boat_data_reception_time.range_to_destination_received_time < DISTANCE_TO_DESTINATION_MAX_DATA_AGE_MS &&
-				time_ms - boat_data_reception_time.direction_to_steer_received_time < DIRECTION_TO_STEER_MAX_DATA_AGE_MS)
-	{
-		seatalk_navigate_to_waypoint_info_send(cross_track_error_data,
-				range_to_destination_data,
-				bearing_to_destination_true_data - (int16_t)variation_wmm_data ,
-				direction_to_steer_data);
+		int16_t bearing_to_destination = bearing_to_destination_magnetic_data;
+		bool send_navigate_to_waypoint_info = false;
+
+		if (time_ms - boat_data_reception_time.bearing_to_destination_magnetic_received_time < BEARING_TO_DESTINATION_MAX_DATA_AGE_MS)
+		{
+			bearing_to_destination = bearing_to_destination_magnetic_data;
+			send_navigate_to_waypoint_info = true;
+		}
+		else
+		{
+			if (time_ms - boat_data_reception_time.wmm_calculation_time < WMM_CALCULATION_MAX_DATA_AGE)
+			{
+				bearing_to_destination = bearing_to_destination_true_data - (int16_t)variation_wmm_data;
+				send_navigate_to_waypoint_info = true;
+			}
+		}
+
+		if (send_navigate_to_waypoint_info)
+		{
+			seatalk_navigate_to_waypoint_info_send(cross_track_error_data,
+					range_to_destination_data,
+					bearing_to_destination,
+					direction_to_steer_data);
+		}
 	}
 
     // switch on or off RMC message transmission here
