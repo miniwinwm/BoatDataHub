@@ -30,6 +30,7 @@ SOFTWARE.
 #include "FreeRTOS.h"
 #include "queue.h"
 #include "task.h"
+#include "main.h"
 
 #define E_PORT					GPIOB
 #define E_PIN					GPIO_Pin_0
@@ -126,7 +127,7 @@ void lcd_task(void *parameters)
 	(void)memcpy(&lcd_queue_handle, parameters, sizeof(QueueHandle_t));
 
 	// signal main task that this task has started
-	(void)xTaskNotifyGive(xTaskGetHandle("MAIN"));
+	(void)xTaskNotifyGive(*get_main_task_handle());
 
 	while (true)
 	{

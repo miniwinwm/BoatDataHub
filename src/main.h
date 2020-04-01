@@ -25,6 +25,8 @@ SOFTWARE.
 #define MAIN_H
 
 #include <stdint.h>
+#include "FreeRTOS.h"
+#include "task.h"
 
 // this includes code that corrects the ST2000+ problem of switching from track, auto or vane mode into standby with no user interaction
 #define GEORGE_CORRECTOR
@@ -41,5 +43,6 @@ float get_latitude_dual_source_data(void);
 float get_sog_dual_source_data(void);
 float get_pressure_data(void);
 void clear_all_data_reception_times(void);
+TaskHandle_t *get_main_task_handle(void);
 
 #endif

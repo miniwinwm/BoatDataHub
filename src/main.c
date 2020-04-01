@@ -168,6 +168,7 @@ static StackType_t main_stack[MAIN_TASK_STACK_SIZE];
 static StaticTask_t main_task_buffer;
 static TimerHandle_t xTimers[MAIN_TASK_SW_TIMER_COUNT];
 static StaticTimer_t xTimerBuffers[MAIN_TASK_SW_TIMER_COUNT];
+static TaskHandle_t main_task_handle;
 
 // pressure sensor task
 static StackType_t pressure_sensor_stack[PRESSURE_SENSOR_TASK_STACK_SIZE];
@@ -843,7 +844,6 @@ static const transmit_message_details_t nmea_transmit_message_details_RMC_blueto
 static void callback_seatalk_message(uint8_t message_type)
 {
 	uint32_t time_ms = timer_get_time_ms();
-	//seatalk_date_t date;
 
 	switch(message_type)
 	{
@@ -989,6 +989,11 @@ static void callback_seatalk_message(uint8_t message_type)
 	}
 }
 
+TaskHandle_t *get_main_task_handle(void)
+{
+	return &main_task_handle;
+}
+
 int main(void)
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
@@ -1056,7 +1061,6 @@ int main(void)
 
 	delay_init();
 	backlight_init();
-	backlight_set(BACKLIGHT_MAX);
 
 	buzzer_init();
 	lcd_init();
@@ -1069,14 +1073,14 @@ int main(void)
 	// clear reset cause flag - read on each boot by 2.4 GHz radio board init procedure for autopilot remote
 	RCC_ClearFlag();
 
-    // data in via Bluetooth port */
+    // data in via Bluetooth port
     nmea_enable_receive_message(&nmea_receive_message_details_RMB);
     nmea_enable_receive_message(&nmea_receive_message_details_APB);
 
-    // data in via AIS port */
+    // data in via AIS port
     nmea_enable_receive_message(&nmea_receive_message_details_VDM);
 
-    // data in via GPS port */
+    // data in via GPS port
     nmea_enable_receive_message(&nmea_receive_message_details_RMC_GPS);
     nmea_enable_receive_message(&nmea_receive_message_details_GGA);
 
@@ -1085,7 +1089,7 @@ int main(void)
 
 	lcd_queue_handle = xQueueCreateStatic((UBaseType_t)LCD_QUEUE_CAPACITY, (UBaseType_t)(sizeof(lcd_packet_t)), lcd_queue_buffer, &lcd_queue);
 	(void)xTaskCreateStatic(lcd_task,
-			"LCD",
+			"",
 			LCD_TASK_STACK_SIZE,
 			&lcd_queue_handle,
 			(UBaseType_t)2,
@@ -1094,7 +1098,7 @@ int main(void)
 
 	pressure_sensor_queue_handle = xQueueCreateStatic((UBaseType_t)1, (UBaseType_t)(sizeof(float)), pressure_sensor_queue_buffer, &pressure_sensor_queue);
 	(void)xTaskCreateStatic(pressure_sensor_task,
-			"PRES",
+			"",
 			PRESSURE_SENSOR_TASK_STACK_SIZE,
 			&pressure_sensor_queue_handle,
 			(UBaseType_t)1,
@@ -1103,38 +1107,44 @@ int main(void)
 
    	autopilot_remote_queue_handle = xQueueCreateStatic((UBaseType_t)1, (UBaseType_t)(sizeof(autopilot_remote_command_t)), autopilot_remote_queue_buffer, &autopilot_remote_queue);
    	(void)xTaskCreateStatic(autopilot_remote_task,
-   			"AUTO",
+   			"",
 			AUTOPILOT_REMOTE_TASK_STACK_SIZE,
 			&autopilot_remote_queue_handle,
 			(UBaseType_t)1,
 			autopilot_remote_stack,
 			&autopilot_remote_task_buffer);
 
-   	(void)xTaskCreateStatic(main_task, "MAIN", MAIN_TASK_STACK_SIZE, NULL, (UBaseType_t)3, main_stack, &main_task_buffer);
+   	main_task_handle = xTaskCreateStatic(main_task,
+   			"",
+			MAIN_TASK_STACK_SIZE,
+			NULL,
+			(UBaseType_t)3,
+			main_stack,
+			&main_task_buffer);
 
 	xTimers[SW_TIMER_10_S] = xTimerCreateStatic(
-						"10s",
-						(TickType_t)10000,
-						pdTRUE,
-						(void *)0,
-						vTimerCallback10s,
-						&(xTimerBuffers[SW_TIMER_10_S]));
+			"",
+			(TickType_t)10000,
+			pdTRUE,
+			(void *)0,
+			vTimerCallback10s,
+			&(xTimerBuffers[SW_TIMER_10_S]));
 
 	xTimers[SW_TIMER_25_MS] = xTimerCreateStatic(
-						"25ms",
-						(TickType_t)25,
-						pdTRUE,
-						(void *)0,
-						vTimerCallback25ms,
-						&(xTimerBuffers[SW_TIMER_25_MS]));
+			"",
+			(TickType_t)25,
+			pdTRUE,
+			(void *)0,
+			vTimerCallback25ms,
+			&(xTimerBuffers[SW_TIMER_25_MS]));
 
 	xTimers[SW_TIMER_1_S] = xTimerCreateStatic(
-						"1s",
-						(TickType_t)1000,
-						pdTRUE,
-						(void *)0,
-						vTimerCallback1s,
-						&(xTimerBuffers[SW_TIMER_1_S]));
+			"",
+			(TickType_t)1000,
+			pdTRUE,
+			(void *)0,
+			vTimerCallback1s,
+			&(xTimerBuffers[SW_TIMER_1_S]));
 
 	vTaskStartScheduler();
 
@@ -1162,7 +1172,7 @@ static void vTimerCallback10s(TimerHandle_t xTimer)
 	{
 		// do a wmm calculation
 		date = wmm_get_date(date_dual_source_data.year, date_dual_source_data.month, date_dual_source_data.date);
-		E0000(0.0f, latitude_dual_source_data, longitude_dual_source_data, date, &variation_wmm_data);
+		E0000(latitude_dual_source_data, longitude_dual_source_data, date, &variation_wmm_data);
 		boat_data_reception_time.wmm_calculation_time = time_ms;
 	}
 }

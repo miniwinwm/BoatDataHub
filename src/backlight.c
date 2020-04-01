@@ -36,9 +36,8 @@ void backlight_init(void)
 	TIM_TimeBaseInit(TIM1, &TIM_TimeBaseStructure);
 
 	TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
-	//TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
 	TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
-	TIM_OCInitStructure.TIM_Pulse = 250U;
+	TIM_OCInitStructure.TIM_Pulse = levels[BACKLIGHT_MAX];
 	TIM_OC4Init(TIM1, &TIM_OCInitStructure);
 
 	TIM_OC4PreloadConfig(TIM1, TIM_OCPreload_Enable);

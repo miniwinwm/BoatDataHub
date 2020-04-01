@@ -30,6 +30,7 @@ SOFTWARE.
 #include "FreeRTOS.h"
 #include "queue.h"
 #include "task.h"
+#include "main.h"
 
 #define I2C_PRESSURE_SENSOR_ADDRESS			0x76U
 
@@ -361,7 +362,7 @@ void pressure_sensor_task(void *parameters)
 	}
 
 	// signal main task that this task has started
-	(void)xTaskNotifyGive(xTaskGetHandle("MAIN"));
+	(void)xTaskNotifyGive(*get_main_task_handle());
 
     while (true)
     {

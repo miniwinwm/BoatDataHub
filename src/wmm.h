@@ -13,7 +13,7 @@ typedef struct
 	float dhnm;
 } wmm_cof_record_t;
 
-void E0000(float alt, float glat, float glon, float time_years, float *dec);
+void E0000(float glat, float glon, float time_years, float *dec);
 void wmm_init(void);
 float wmm_get_date(uint8_t year, uint8_t month, uint8_t date);
 

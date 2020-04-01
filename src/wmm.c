@@ -72,7 +72,6 @@ void wmm_init(void)
 
 	// CONVERT SCHMIDT NORMALIZED GAUSS COEFFICIENTS TO UNNORMALIZED
 	*snorm = 1.0f;
-	//fm[0] = 0.0f;
 	for (n = 1U; n <= 12U; n++)
 	{
 		*(snorm + n) = *(snorm + n - 1U) * (float)(2U * n - 1U) / (float)n;
@@ -99,7 +98,7 @@ void wmm_init(void)
 	k[1][1] = 0.0f;
 }
 
-void E0000(float alt, float glat, float glon, float time_years, float *dec)
+void E0000(float glat, float glon, float time_years, float *dec)
 {
 	static float tc[13][13];
 	static float sp[13];
@@ -124,14 +123,13 @@ void E0000(float alt, float glat, float glon, float time_years, float *dec)
 
 	// CONVERT FROM GEODETIC COORDS. TO SPHERICAL COORDS
 	float q = sqrtf(A2_CONST - C2_CONST * srlat2);
-	float q1 = alt * q;
-	float q2 = ((q1 + A2_CONST) / (q1 + B2_CONST)) * ((q1 + A2_CONST) / (q1 + B2_CONST));
+	float q2 = (A2_CONST / (B2_CONST)) * (A2_CONST / B2_CONST);
 	float ct = srlat / sqrtf(q2 * crlat2 + srlat2);
 	float st = sqrtf(1.0f - (ct * ct));
-	float r2 = (alt * alt) + 2.0f * q1 + (A4_CONST - C4_CONST * srlat2) / (q * q);
+	float r2 = (A4_CONST - C4_CONST * srlat2) / (q * q);
 	float r = sqrtf(r2);
 	float d = sqrtf(A2_CONST * crlat2 + B2_CONST * srlat2);
-	float ca = (alt + d) / r;
+	float ca = d / r;
 	float sa = C2_CONST * crlat * srlat / (r * d);
 	for (uint8_t m = 2U; m <= 12U; m++)
 	{

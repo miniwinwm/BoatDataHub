@@ -32,6 +32,7 @@ SOFTWARE.
 #include "task.h"
 #include "buzzer.h"
 #include "autopilot_remote.h"
+#include "main.h"
 
 static QueueHandle_t autopilot_remote_queue_handle;
 static TaskHandle_t this_task_handle;
@@ -97,7 +98,7 @@ void autopilot_remote_task(void *parameters)
 	this_task_handle = xTaskGetCurrentTaskHandle();
 
 	// signal main task that this task has started
-	(void)xTaskNotifyGive(xTaskGetHandle("MAIN"));
+	(void)xTaskNotifyGive(*get_main_task_handle());
 
     while (true)
     {
