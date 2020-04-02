@@ -306,12 +306,9 @@ static const nmea_receive_message_details_t nmea_receive_message_details_VDM = {
 
 static void VDM_receive_callback(char *data)
 {
-	if (data)
+	if (nmea_decode_VDM(data, &nmea_message_data_VDM) == nmea_error_none)
 	{
-		if (nmea_decode_VDM(data, &nmea_message_data_VDM) == nmea_error_none)
-		{
-			nmea_transmit_message_now(PORT_BLUETOOTH, nmea_message_VDM);
-		}
+		nmea_transmit_message_now(PORT_BLUETOOTH, nmea_message_VDM);
 	}
 }
 
@@ -320,7 +317,7 @@ static void VDM_receive_callback(char *data)
 * *********/
 
 /* GGA receive from GPS mouse */
-static const nmea_receive_message_details_t nmea_receive_message_details_GGA = { nmea_message_GGA, PORT_GPS, GGA_receive_callback };
+static const nmea_receive_message_details_t nmea_receive_message_details_GGA = {nmea_message_GGA, PORT_GPS, GGA_receive_callback};
 
 static void GGA_receive_callback(char *data)
 {
@@ -329,46 +326,43 @@ static void GGA_receive_callback(char *data)
 	// only do GGA decoding if gps from mouse
     if (!settings_get_gps_from_seatalk())
     {
-		if (data)
+		if (nmea_decode_GGA(data, &nmea_message_data_GGA) == nmea_error_none)
 		{
-			if (nmea_decode_GGA(data, &nmea_message_data_GGA) == nmea_error_none)
+			if (nmea_message_data_GGA.data_available & NMEA_GGA_QUALITY_INDICATOR_PRESENT)
 			{
-				if (nmea_message_data_GGA.data_available & NMEA_GGA_QUALITY_INDICATOR_PRESENT)
-				{
-					gps_quality_indicator_dual_source_data = nmea_message_data_GGA.quality_indicator;
-					boat_data_reception_time.gps_quality_indicator_received_time = time_ms;
-				}
+				gps_quality_indicator_dual_source_data = nmea_message_data_GGA.quality_indicator;
+				boat_data_reception_time.gps_quality_indicator_received_time = time_ms;
+			}
 
-				if (nmea_message_data_GGA.data_available & NMEA_GGA_SATELLITES_IN_USE_PRESENT)
-				{
-					satellites_in_use_dual_source_data = nmea_message_data_GGA.satellites_in_use;
-					boat_data_reception_time.satellites_in_use_received_time = time_ms;
-				}
+			if (nmea_message_data_GGA.data_available & NMEA_GGA_SATELLITES_IN_USE_PRESENT)
+			{
+				satellites_in_use_dual_source_data = nmea_message_data_GGA.satellites_in_use;
+				boat_data_reception_time.satellites_in_use_received_time = time_ms;
+			}
 
-				if (nmea_message_data_GGA.data_available & NMEA_GGA_HDOP_PRESENT)
-				{
-					hdop_dual_source_data = nmea_message_data_GGA.HDOP;
-					boat_data_reception_time.hdop_received_time = time_ms;
-				}
+			if (nmea_message_data_GGA.data_available & NMEA_GGA_HDOP_PRESENT)
+			{
+				hdop_dual_source_data = nmea_message_data_GGA.HDOP;
+				boat_data_reception_time.hdop_received_time = time_ms;
+			}
 
-				if (nmea_message_data_GGA.data_available & NMEA_GGA_ALTITUDE_PRESENT)
-				{
-					altitude_dual_source_data = nmea_message_data_GGA.altitude;
-					boat_data_reception_time.altitude_received_time = time_ms;
-				}
+			if (nmea_message_data_GGA.data_available & NMEA_GGA_ALTITUDE_PRESENT)
+			{
+				altitude_dual_source_data = nmea_message_data_GGA.altitude;
+				boat_data_reception_time.altitude_received_time = time_ms;
+			}
 
-				if (nmea_message_data_GGA.data_available & NMEA_GGA_GEIODAL_SEPARATION_PRESENT)
-				{
-					geoidal_separation_dual_source_data = nmea_message_data_GGA.geoidal_separation;
-					boat_data_reception_time.geoidal_separation_received_time = time_ms;
-				}
+			if (nmea_message_data_GGA.data_available & NMEA_GGA_GEIODAL_SEPARATION_PRESENT)
+			{
+				geoidal_separation_dual_source_data = nmea_message_data_GGA.geoidal_separation;
+				boat_data_reception_time.geoidal_separation_received_time = time_ms;
 			}
 		}
-    }
+	}
 }
 
 /* RMC receive from GPS mouse */
-static const nmea_receive_message_details_t nmea_receive_message_details_RMC_GPS = { nmea_message_RMC, PORT_GPS, RMC_receive_callback };
+static const nmea_receive_message_details_t nmea_receive_message_details_RMC_GPS = {nmea_message_RMC, PORT_GPS, RMC_receive_callback};
 
 static void RMC_receive_callback(char *data)
 {
@@ -376,62 +370,59 @@ static void RMC_receive_callback(char *data)
 	float frac_part;
 	uint32_t time_ms = timer_get_time_ms();
 
-	if (data)
+	if (nmea_decode_RMC(data, &nmea_message_data_RMC) == nmea_error_none)
 	{
-		if (nmea_decode_RMC(data, &nmea_message_data_RMC) == nmea_error_none)
+		if (nmea_message_data_RMC.status == 'A')
 		{
-			if (nmea_message_data_RMC.status == 'A')
+			if (nmea_message_data_RMC.data_available & NMEA_RMC_UTC_PRESENT)
 			{
-				if (nmea_message_data_RMC.data_available & NMEA_RMC_UTC_PRESENT)
-				{
-					gmt_dual_source_data.hour = nmea_message_data_RMC.utc.hours;
-					gmt_dual_source_data.minute = nmea_message_data_RMC.utc.minutes;
-					gmt_dual_source_data.second = nmea_message_data_RMC.utc.seconds;
-					boat_data_reception_time.gmt_received_time = time_ms;
-				}
+				gmt_dual_source_data.hour = nmea_message_data_RMC.utc.hours;
+				gmt_dual_source_data.minute = nmea_message_data_RMC.utc.minutes;
+				gmt_dual_source_data.second = (uint8_t)nmea_message_data_RMC.utc.seconds;
+				boat_data_reception_time.gmt_received_time = time_ms;
+			}
 
-				if (nmea_message_data_RMC.data_available & NMEA_RMC_DATE_PRESENT)
-				{
-					date_dual_source_data.year = nmea_message_data_RMC.date.year - 2000U;
-					date_dual_source_data.month = nmea_message_data_RMC.date.month;
-					date_dual_source_data.date = nmea_message_data_RMC.date.date;
-					boat_data_reception_time.date_received_time = time_ms;
-				}
+			if (nmea_message_data_RMC.data_available & NMEA_RMC_DATE_PRESENT)
+			{
+				date_dual_source_data.year = (uint8_t)(nmea_message_data_RMC.date.year - 2000U);
+				date_dual_source_data.month = nmea_message_data_RMC.date.month;
+				date_dual_source_data.date = nmea_message_data_RMC.date.date;
+				boat_data_reception_time.date_received_time = time_ms;
+			}
 
-				if (nmea_message_data_RMC.data_available & NMEA_RMC_SOG_PRESENT)
-				{
-					speed_over_ground_dual_source_data = nmea_message_data_RMC.SOG;
-					boat_data_reception_time.speed_over_ground_received_time = time_ms;
-				}
+			if (nmea_message_data_RMC.data_available & NMEA_RMC_SOG_PRESENT)
+			{
+				speed_over_ground_dual_source_data = nmea_message_data_RMC.SOG;
+				boat_data_reception_time.speed_over_ground_received_time = time_ms;
+			}
 
-				if (nmea_message_data_RMC.data_available & NMEA_RMC_COG_PRESENT)
-				{
-					course_over_ground_dual_source_data = nmea_message_data_RMC.COG;
-					boat_data_reception_time.course_over_ground_received_time = time_ms;
-				}
+			if (nmea_message_data_RMC.data_available & NMEA_RMC_COG_PRESENT)
+			{
+				course_over_ground_dual_source_data = nmea_message_data_RMC.COG;
+				boat_data_reception_time.course_over_ground_received_time = time_ms;
+			}
 
-				if (nmea_message_data_RMC.data_available & NMEA_RMC_LATITUDE_PRESENT)
-				{
-					frac_part = modff(nmea_message_data_RMC.latitude / 100.0f, &int_part);
-					latitude_dual_source_data = int_part;
-					latitude_dual_source_data += frac_part / 0.6f;
-					boat_data_reception_time.latitude_received_time = time_ms;
-				}
+			if (nmea_message_data_RMC.data_available & NMEA_RMC_LATITUDE_PRESENT)
+			{
+				frac_part = modff(nmea_message_data_RMC.latitude / 100.0f, &int_part);
+				latitude_dual_source_data = int_part;
+				latitude_dual_source_data += frac_part / 0.6f;
+				boat_data_reception_time.latitude_received_time = time_ms;
+			}
 
-				if (nmea_message_data_RMC.data_available & NMEA_RMC_LONGITUDE_PRESENT)
-				{
-					frac_part = modff(nmea_message_data_RMC.longitude / 100.0f, &int_part);
-					longitude_dual_source_data = int_part;
-					longitude_dual_source_data += frac_part / 0.6f;
-					boat_data_reception_time.longitude_received_time = time_ms;
-				}
+			if (nmea_message_data_RMC.data_available & NMEA_RMC_LONGITUDE_PRESENT)
+			{
+				frac_part = modff(nmea_message_data_RMC.longitude / 100.0f, &int_part);
+				longitude_dual_source_data = int_part;
+				longitude_dual_source_data += frac_part / 0.6f;
+				boat_data_reception_time.longitude_received_time = time_ms;
 			}
 		}
 	}
 }
 
 /* RMC transmit to VHF */
-static const transmit_message_details_t nmea_transmit_message_details_RMC_GPS = { nmea_message_RMC, PORT_GPS, 1000UL, RMC_transmit_callback, &nmea_message_data_RMC, (nmea_encoder_function_t)nmea_encode_RMC };
+static const transmit_message_details_t nmea_transmit_message_details_RMC_GPS = {nmea_message_RMC, PORT_GPS, 1000UL, RMC_transmit_callback, &nmea_message_data_RMC, (nmea_encoder_function_t)nmea_encode_RMC};
 
 static void RMC_transmit_callback(void)
 {
@@ -439,10 +430,10 @@ static void RMC_transmit_callback(void)
 	float frac_part;
 
 	nmea_message_data_RMC.status = 'A';
-	nmea_message_data_RMC.utc.seconds = gmt_dual_source_data.second;
+	nmea_message_data_RMC.utc.seconds = (float)gmt_dual_source_data.second;
 	nmea_message_data_RMC.utc.minutes = gmt_dual_source_data.minute;
 	nmea_message_data_RMC.utc.hours = gmt_dual_source_data.hour;
-	nmea_message_data_RMC.date.year = date_dual_source_data.year + 2000U;
+	nmea_message_data_RMC.date.year = (uint16_t)date_dual_source_data.year + 2000U;
 	nmea_message_data_RMC.date.month = date_dual_source_data.month;
 	nmea_message_data_RMC.date.date = date_dual_source_data.date;
 	nmea_message_data_RMC.SOG = speed_over_ground_dual_source_data;
@@ -475,73 +466,70 @@ static void RMC_transmit_callback(void)
 * *********/
 
 /* RMB receive from OpenCPN */
-static const nmea_receive_message_details_t nmea_receive_message_details_RMB = { nmea_message_RMB, PORT_BLUETOOTH, RMB_receive_callback };
+static const nmea_receive_message_details_t nmea_receive_message_details_RMB = {nmea_message_RMB, PORT_BLUETOOTH, RMB_receive_callback};
 
 static void RMB_receive_callback(char *data)
 {
 	uint32_t time_ms = timer_get_time_ms();
 
-	if (data)
+	if (nmea_decode_RMB(data, &nmea_message_data_RMB) == nmea_error_none)
 	{
-		if (nmea_decode_RMB(data, &nmea_message_data_RMB) == nmea_error_none)
+		if (nmea_message_data_RMB.data_available & NMEA_RMB_STATUS_PRESENT && nmea_message_data_RMB.status == 'A')
 		{
-			if (nmea_message_data_RMB.data_available & NMEA_RMB_STATUS_PRESENT && nmea_message_data_RMB.status == 'A')
+			if (nmea_message_data_RMB.data_available & NMEA_RMB_MODE_PRESENT && (nmea_message_data_RMB.mode == 'A' || nmea_message_data_RMB.mode == 'D'))
 			{
-				if (nmea_message_data_RMB.data_available & NMEA_RMB_MODE_PRESENT && (nmea_message_data_RMB.mode == 'A' || nmea_message_data_RMB.mode == 'D'))
+				if (nmea_message_data_RMB.data_available & NMEA_RMB_CROSS_TRACK_ERROR_PRESENT)
 				{
-					if (nmea_message_data_RMB.data_available & NMEA_RMB_CROSS_TRACK_ERROR_PRESENT)
-					{
-						// not used
-					}
+					// not used
+				}
 
-					if (nmea_message_data_RMB.data_available & NMEA_RMB_DIR_TO_STEER_PRESENT)
-					{
-						// not used
-					}
+				if (nmea_message_data_RMB.data_available & NMEA_RMB_DIR_TO_STEER_PRESENT)
+				{
+					// not used
+				}
 
-					if (nmea_message_data_RMB.data_available & NMEA_RMB_ORIG_WAYPOINT_ID_PRESENT)
-					{
-						// not used
-					}
+				if (nmea_message_data_RMB.data_available & NMEA_RMB_ORIG_WAYPOINT_ID_PRESENT)
+				{
+					// not used
+				}
 
-					if (nmea_message_data_RMB.data_available & NMEA_RMB_DEST_WAYPOINT_ID_PRESENT)
-					{
-						// using RMB's waypoint id max length as it is less than APB's and both messages write to the same data buffer
-						(void)strncpy(waypoint_id_data, nmea_message_data_RMB.destination_waypoint_name, NMEA_RMB_WAYPOINT_NAME_MAX_LENGTH);
-						waypoint_id_data[NMEA_RMB_WAYPOINT_NAME_MAX_LENGTH] = '\0';	// safe use of strncpy
-						boat_data_reception_time.waypoint_id_received_time = time_ms;
-					}
+				if (nmea_message_data_RMB.data_available & NMEA_RMB_DEST_WAYPOINT_ID_PRESENT)
+				{
+					// using RMB's waypoint id max length as it is less than APB's and both messages write to the same data buffer
+					(void)strncpy(waypoint_id_data, nmea_message_data_RMB.destination_waypoint_name, NMEA_RMB_WAYPOINT_NAME_MAX_LENGTH);
+					waypoint_id_data[NMEA_RMB_WAYPOINT_NAME_MAX_LENGTH] = '\0';	// safe use of strncpy
+					boat_data_reception_time.waypoint_id_received_time = time_ms;
+				}
 
-					if (nmea_message_data_RMB.data_available & NMEA_RMB_LATITUDE_PRESENT)
-					{
-						// not used
-					}
+				if (nmea_message_data_RMB.data_available & NMEA_RMB_LATITUDE_PRESENT)
+				{
+					// not used
+				}
 
-					if (nmea_message_data_RMB.data_available & NMEA_RMB_LONGITUDE_PRESENT)
-					{
-						// not used
-					}
+				if (nmea_message_data_RMB.data_available & NMEA_RMB_LONGITUDE_PRESENT)
+				{
+					// not used
+				}
 
-					if (nmea_message_data_RMB.data_available & NMEA_RMB_RANGE_TO_DEST_PRESENT)
-					{
-						range_to_destination_data = nmea_message_data_RMB.range_to_destination;
-						boat_data_reception_time.range_to_destination_received_time = time_ms;
-					}
+				if (nmea_message_data_RMB.data_available & NMEA_RMB_RANGE_TO_DEST_PRESENT)
+				{
+					range_to_destination_data = nmea_message_data_RMB.range_to_destination;
+					boat_data_reception_time.range_to_destination_received_time = time_ms;
+				}
 
-					if (nmea_message_data_RMB.data_available & NMEA_RMB_BEARING_TRUE_PRESENT)
-					{
-						//not used
-					}
+				if (nmea_message_data_RMB.data_available & NMEA_RMB_BEARING_TRUE_PRESENT)
+				{
+					//not used
+				}
 
-					if (nmea_message_data_RMB.data_available & NMEA_RMB_VELOCITY_PRESENT)
-					{
-						// not used
-					}
+				if (nmea_message_data_RMB.data_available & NMEA_RMB_VELOCITY_PRESENT)
+				{
+					// not used
+				}
 
-					if (nmea_message_data_RMB.data_available & NMEA_RMB_ARRIVAL_STATUS_PRESENT)
-					{
-						// ambiguous, use values from APB message instead
-					}
+				if (nmea_message_data_RMB.data_available & NMEA_RMB_ARRIVAL_STATUS_PRESENT)
+				{
+					// ambiguous, use values from APB message instead
 				}
 			}
 		}
@@ -549,16 +537,11 @@ static void RMB_receive_callback(char *data)
 }
 
 /* APB receive from OpenCPN */
-static const nmea_receive_message_details_t nmea_receive_message_details_APB = { nmea_message_APB, PORT_BLUETOOTH, APB_receive_callback };
+static const nmea_receive_message_details_t nmea_receive_message_details_APB = {nmea_message_APB, PORT_BLUETOOTH, APB_receive_callback};
 
 static void APB_receive_callback(char *data)
 {
 	uint32_t time_ms = timer_get_time_ms();
-
-	if (!data)
-	{
-		return;
-	}
 
 	if (nmea_decode_APB(data, &nmea_message_data_APB) != nmea_error_none)
 	{
@@ -659,14 +642,14 @@ static void APB_receive_callback(char *data)
 }
 
 /* VDM - transmit to OpenCPN */
-static const transmit_message_details_t nmea_transmit_message_details_VDM = { nmea_message_VDM,	PORT_BLUETOOTH, 0UL, VDM_transmit_callback, &nmea_message_data_VDM, (nmea_encoder_function_t)nmea_encode_VDM };
+static const transmit_message_details_t nmea_transmit_message_details_VDM = {nmea_message_VDM,	PORT_BLUETOOTH, 0UL, VDM_transmit_callback, &nmea_message_data_VDM, (nmea_encoder_function_t)nmea_encode_VDM};
 
 static void VDM_transmit_callback(void)
 {
 }
 
 /* XDR transmit to OpenCPN */
-static const transmit_message_details_t nmea_transmit_message_details_XDR = { nmea_message_XDR,	PORT_BLUETOOTH, 10000UL, XDR_transmit_callback,	&nmea_message_data_XDR,	(nmea_encoder_function_t)nmea_encode_XDR };
+static const transmit_message_details_t nmea_transmit_message_details_XDR = {nmea_message_XDR,	PORT_BLUETOOTH, 10000UL, XDR_transmit_callback,	&nmea_message_data_XDR,	(nmea_encoder_function_t)nmea_encode_XDR};
 
 static void XDR_transmit_callback(void)
 {
@@ -679,7 +662,7 @@ static void XDR_transmit_callback(void)
 }
 
 /* MDA transmit to OpenCPN */
-static const transmit_message_details_t nmea_transmit_message_details_MDA = { nmea_message_MDA,	PORT_BLUETOOTH, 10000UL, MDA_transmit_callback,	&nmea_message_data_MDA,	(nmea_encoder_function_t)nmea_encode_MDA };
+static const transmit_message_details_t nmea_transmit_message_details_MDA = {nmea_message_MDA,	PORT_BLUETOOTH, 10000UL, MDA_transmit_callback,	&nmea_message_data_MDA,	(nmea_encoder_function_t)nmea_encode_MDA};
 
 static void MDA_transmit_callback(void)
 {
@@ -688,7 +671,7 @@ static void MDA_transmit_callback(void)
 }
 
 /* DPT transmit to OpenCPN */
-static const transmit_message_details_t nmea_transmit_message_details_DPT = { nmea_message_DPT,	PORT_BLUETOOTH, 500UL, DPT_transmit_callback, &nmea_message_data_DPT, (nmea_encoder_function_t)nmea_encode_DPT };
+static const transmit_message_details_t nmea_transmit_message_details_DPT = {nmea_message_DPT,	PORT_BLUETOOTH, 500UL, DPT_transmit_callback, &nmea_message_data_DPT, (nmea_encoder_function_t)nmea_encode_DPT};
 
 static void DPT_transmit_callback(void)
 {
@@ -697,7 +680,7 @@ static void DPT_transmit_callback(void)
 }
 
 /* MWD transmit to OpenCPN */
-static const transmit_message_details_t nmea_transmit_message_details_MWD = { nmea_message_MWD,	PORT_BLUETOOTH, 2000UL, MWD_transmit_callback, &nmea_message_data_MWD, (nmea_encoder_function_t)nmea_encode_MWD };
+static const transmit_message_details_t nmea_transmit_message_details_MWD = {nmea_message_MWD,	PORT_BLUETOOTH, 2000UL, MWD_transmit_callback, &nmea_message_data_MWD, (nmea_encoder_function_t)nmea_encode_MWD};
 
 static void MWD_transmit_callback(void)
 {
@@ -715,7 +698,7 @@ static void MWD_transmit_callback(void)
 }
 
 /* VHW transmit to OpenCPN */
-static const transmit_message_details_t nmea_transmit_message_details_VHW = { nmea_message_VHW,	PORT_BLUETOOTH, 1000UL, VHW_transmit_callback, &nmea_message_data_VHW, (nmea_encoder_function_t)nmea_encode_VHW };
+static const transmit_message_details_t nmea_transmit_message_details_VHW = {nmea_message_VHW,	PORT_BLUETOOTH, 1000UL, VHW_transmit_callback, &nmea_message_data_VHW, (nmea_encoder_function_t)nmea_encode_VHW};
 
 static void VHW_transmit_callback(void)
 {
@@ -724,7 +707,7 @@ static void VHW_transmit_callback(void)
 }
 
 /* MTW transmit to OpenCPN */
-static const transmit_message_details_t nmea_transmit_message_details_MTW = { nmea_message_MTW, PORT_BLUETOOTH, 2000UL, MTW_transmit_callback, &nmea_message_data_MTW, (nmea_encoder_function_t)nmea_encode_MTW };
+static const transmit_message_details_t nmea_transmit_message_details_MTW = {nmea_message_MTW, PORT_BLUETOOTH, 2000UL, MTW_transmit_callback, &nmea_message_data_MTW, (nmea_encoder_function_t)nmea_encode_MTW};
 
 static void MTW_transmit_callback(void)
 {
@@ -733,7 +716,7 @@ static void MTW_transmit_callback(void)
 }
 
 /* VLW transmit to OpenCPN */
-static const transmit_message_details_t nmea_transmit_message_details_VLW = { nmea_message_VLW, PORT_BLUETOOTH, 1000UL, VLW_transmit_callback, &nmea_message_data_VLW, (nmea_encoder_function_t)nmea_encode_VLW };
+static const transmit_message_details_t nmea_transmit_message_details_VLW = {nmea_message_VLW, PORT_BLUETOOTH, 1000UL, VLW_transmit_callback, &nmea_message_data_VLW, (nmea_encoder_function_t)nmea_encode_VLW};
 
 static void VLW_transmit_callback(void)
 {
@@ -754,7 +737,7 @@ static void VLW_transmit_callback(void)
 }
 
 /* MWV transmit to OpenCPN */
-static const transmit_message_details_t nmea_transmit_message_details_MWV = { nmea_message_MWV, PORT_BLUETOOTH, 1000UL, MWV_transmit_callback, &nmea_message_data_MWV, (nmea_encoder_function_t)nmea_encode_MWV };
+static const transmit_message_details_t nmea_transmit_message_details_MWV = {nmea_message_MWV, PORT_BLUETOOTH, 1000UL, MWV_transmit_callback, &nmea_message_data_MWV, (nmea_encoder_function_t)nmea_encode_MWV};
 
 static void MWV_transmit_callback(void)
 {
@@ -805,7 +788,7 @@ static void MWV_transmit_callback(void)
 }
 
 /* HDM transmit to OpenCPN */
-static const transmit_message_details_t nmea_transmit_message_details_HDM = { nmea_message_HDM, PORT_BLUETOOTH, 1000UL, HDM_transmit_callback, &nmea_message_data_HDM, (nmea_encoder_function_t)nmea_encode_HDM };
+static const transmit_message_details_t nmea_transmit_message_details_HDM = {nmea_message_HDM, PORT_BLUETOOTH, 1000UL, HDM_transmit_callback, &nmea_message_data_HDM, (nmea_encoder_function_t)nmea_encode_HDM};
 
 static void HDM_transmit_callback(void)
 {
@@ -814,7 +797,7 @@ static void HDM_transmit_callback(void)
 }
 
 /* HDT transmit to OpenCPN */
-static const transmit_message_details_t nmea_transmit_message_details_HDT = { nmea_message_HDT, PORT_BLUETOOTH, 1000UL, HDT_transmit_callback, &nmea_message_data_HDT, (nmea_encoder_function_t)nmea_encode_HDT };
+static const transmit_message_details_t nmea_transmit_message_details_HDT = {nmea_message_HDT, PORT_BLUETOOTH, 1000UL, HDT_transmit_callback, &nmea_message_data_HDT, (nmea_encoder_function_t)nmea_encode_HDT};
 
 static void HDT_transmit_callback(void)
 {
@@ -823,7 +806,7 @@ static void HDT_transmit_callback(void)
 }
 
 /* GGA transmit to OpenCPN */
-static const transmit_message_details_t nmea_transmit_message_details_GGA = { nmea_message_GGA, PORT_BLUETOOTH, 2000UL, GGA_transmit_callback, &nmea_message_data_GGA, (nmea_encoder_function_t)nmea_encode_GGA };
+static const transmit_message_details_t nmea_transmit_message_details_GGA = {nmea_message_GGA, PORT_BLUETOOTH, 2000UL, GGA_transmit_callback, &nmea_message_data_GGA, (nmea_encoder_function_t)nmea_encode_GGA};
 
 static void GGA_transmit_callback(void)
 {
@@ -837,7 +820,7 @@ static void GGA_transmit_callback(void)
 }
 
 /* RMC transmit to OpenCPN */
-static const transmit_message_details_t nmea_transmit_message_details_RMC_bluetooth = { nmea_message_RMC, PORT_BLUETOOTH, 1000UL, RMC_transmit_callback, &nmea_message_data_RMC, (nmea_encoder_function_t)nmea_encode_RMC };
+static const transmit_message_details_t nmea_transmit_message_details_RMC_bluetooth = {nmea_message_RMC, PORT_BLUETOOTH, 1000UL, RMC_transmit_callback, &nmea_message_data_RMC, (nmea_encoder_function_t)nmea_encode_RMC};
 
 // using earlier defined RMC transmit
 
@@ -1060,7 +1043,7 @@ int main(void)
     GPIO_Init(GPIOB, &GPIO_InitStructure);
 
 	delay_init();
-	backlight_init();
+	backlight_init();	// this sets backlight to max brightness
 
 	buzzer_init();
 	lcd_init();
