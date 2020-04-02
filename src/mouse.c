@@ -21,21 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <stdbool.h>
 #include "stm32f10x.h"
-#include "mouse.h"
-
-void mouse_init(bool start_state)
-{
-    if (start_state)
-    {
-    	mouse_on();
-    }
-    else
-    {
-    	mouse_off();
-    }
-}
 
 void mouse_on(void)
 {

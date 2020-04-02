@@ -24,9 +24,6 @@ SOFTWARE.
 #ifndef MOUSE_H
 #define MOUSE_H
 
-#include <stdbool.h>
-
-void mouse_init(bool start_state);
 void mouse_on(void);
 void mouse_off(void);
 

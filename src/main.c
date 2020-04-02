@@ -1449,7 +1449,14 @@ static void main_task(void *parameters)
 	vTaskDelay((TickType_t)1500);
 	settings_load();
 	backlight_set(settings_get_backlight());
-	mouse_init(!settings_get_gps_from_seatalk());
+	if (settings_get_gps_from_seatalk())
+	{
+		mouse_off();
+	}
+	else
+	{
+		mouse_on();
+	}
 	watcher_init();
     buttons_init();
 
