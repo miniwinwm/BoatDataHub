@@ -17,6 +17,7 @@
 #define B4_CONST (B2_CONST * B2_CONST)
 #define C2_CONST (A2_CONST - B2_CONST)
 #define C4_CONST (A4_CONST - B4_CONST)
+#define COEFFICIENTS_COUNT		90U
 
 static float c[13][13];
 static float cd[13][13];
@@ -24,11 +25,61 @@ static float k[13][13];
 static float snorm[169];
 static float fn[13];
 static float fm[13];
-extern const wmm_cof_record_t wmm_cof_entries[];
+extern const uint8_t wmm_cof_entries_encoded[];
+static wmm_cof_record_t wmm_cof_entries[COEFFICIENTS_COUNT];
+
+static float convert_varint_to_float(char **bytes);
 
 float wmm_get_date(uint8_t year, uint8_t month, uint8_t date)
 {
 	return (float)year + 2000.0f + (float)(month - 1U) / 12.0f + (float)(date - 1U) / (365.0f);
+}
+
+static float convert_varint_to_float(char **bytes)
+{
+	float result;
+	int32_t result_int;
+	bool negative = false;
+	bool first_byte = true;
+	uint8_t shift;
+
+	do
+	{
+		if (first_byte)
+		{
+			if (**bytes & 0x40)
+			{
+				negative = true;
+			}
+
+			result_int = **bytes & 0x3f;
+			shift = 6U;
+			first_byte = false;
+		}
+		else
+		{
+			result_int += (uint32_t)(**bytes & 0x7f) << shift;
+			shift += 7U;
+		}
+
+		if ((**bytes & 0x80) == 0U)
+		{
+			(*bytes)++;
+			break;
+		}
+
+		(*bytes)++;
+
+	} while (true);
+
+
+	result = ((float)result_int) / 10.0f;
+	if (negative)
+	{
+		result = -result;
+	}
+
+	return result;
 }
 
 void wmm_init(void)
@@ -42,6 +93,17 @@ void wmm_init(void)
 	float dgnm;
 	float dhnm;
 	float flnmj;
+	uint8_t i;
+	char *bytes = (char *)&wmm_cof_entries_encoded[0];
+
+	// unpack coefficients
+	for (i = 0U; i < COEFFICIENTS_COUNT; i++)
+	{
+		wmm_cof_entries[i].gnm = convert_varint_to_float(&bytes);
+		wmm_cof_entries[i].hnm = convert_varint_to_float(&bytes);
+		wmm_cof_entries[i].dgnm = convert_varint_to_float(&bytes);
+		wmm_cof_entries[i].dhnm = convert_varint_to_float(&bytes);
+	}
 
 	c[0][0] = 0.0f;
 	cd[0][0] = 0.0f;
