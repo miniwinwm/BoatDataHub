@@ -91,7 +91,6 @@ void autopilot_remote_init(void)
 void autopilot_remote_task(void *parameters)
 {
 	uint8_t autopilot_remote_data;
-	autopilot_remote_command_t autopilot_remote_command;
 
 	(void)memcpy(&autopilot_remote_queue_handle, parameters, sizeof(QueueHandle_t));
 
@@ -118,8 +117,7 @@ void autopilot_remote_task(void *parameters)
 		nrf24l01_irq_clear_all();
 
 		// send data read from radio chip to queue
-		autopilot_remote_command = (autopilot_remote_command_t)autopilot_remote_data;
-		(void)xQueueSend(autopilot_remote_queue_handle, (const void *)&autopilot_remote_command, (TickType_t)100);
+		(void)xQueueSend(autopilot_remote_queue_handle, (const void *)&autopilot_remote_data, (TickType_t)100);
     }
 }
 void EXTI9_5_IRQHandler(void)

@@ -24,14 +24,6 @@ SOFTWARE.
 #ifndef AUTOPILOT_REMOTE_H
 #define AUTOPILOT_REMOTE_H
 
-typedef enum
-{
-	AUTOPILOT_REMOTE_MINUS_1 = 3U,
-	AUTOPILOT_REMOTE_MINUS_10 = 7U,
-	AUTOPILOT_REMOTE_PLUS_1 = 2U,
-	AUTOPILOT_REMOTE_PLUS_10 = 6U
-} autopilot_remote_command_t;
-
 void autopilot_remote_init(void);
 void autopilot_remote_task(void *parameters);
 

@@ -1088,7 +1088,7 @@ int main(void)
 			pressure_sensor_stack,
 			&pressure_sensor_task_handle);
 
-   	autopilot_remote_queue_handle = xQueueCreateStatic((UBaseType_t)1, (UBaseType_t)(sizeof(autopilot_remote_command_t)), autopilot_remote_queue_buffer, &autopilot_remote_queue);
+   	autopilot_remote_queue_handle = xQueueCreateStatic((UBaseType_t)1, (UBaseType_t)(sizeof(uint8_t)), autopilot_remote_queue_buffer, &autopilot_remote_queue);
    	(void)xTaskCreateStatic(autopilot_remote_task,
    			"",
 			AUTOPILOT_REMOTE_TASK_STACK_SIZE,
@@ -1162,7 +1162,6 @@ static void vTimerCallback10s(TimerHandle_t xTimer)
 
 static void vTimerCallback25ms(TimerHandle_t xTimer)
 {
-	autopilot_remote_command_t autopilot_remote_command;
 	autopilot_command_t autopilot_command = AUTOPILOT_COMMAND_UNKNOWN;
 
 	(void)xTimer;
@@ -1170,29 +1169,11 @@ static void vTimerCallback25ms(TimerHandle_t xTimer)
 	nmea_process();
 	watcher_process();
 
-    if (xQueueReceive(autopilot_remote_queue_handle, (void *)&autopilot_remote_command, (TickType_t)0) == pdTRUE)
+    if (xQueueReceive(autopilot_remote_queue_handle, (void *)&autopilot_command, (TickType_t)0) == pdTRUE)
     {
-    	switch (autopilot_remote_command)
-    	{
-    	case AUTOPILOT_REMOTE_MINUS_1:
-    		autopilot_command = AUTOPILOT_COMMAND_MINUS_1;
-    		break;
-
-    	case AUTOPILOT_REMOTE_MINUS_10:
-    		autopilot_command = AUTOPILOT_COMMAND_MINUS_10;
-    		break;
-
-    	case AUTOPILOT_REMOTE_PLUS_1:
-    		autopilot_command = AUTOPILOT_COMMAND_PLUS_1;
-    		break;
-
-    	case AUTOPILOT_REMOTE_PLUS_10:
-    		autopilot_command = AUTOPILOT_COMMAND_PLUS_10;
-    		break;
-    	}
-
 		seatalk_autopilot_send(autopilot_command);
     }
+
 }
 
 static void vTimerCallback1s(TimerHandle_t xTimer)

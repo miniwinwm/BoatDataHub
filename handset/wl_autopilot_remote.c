@@ -184,7 +184,7 @@ void main (void)
 		{
 			PIE1bits.TMR2IE=0;				// kill timer
 			INTCONbits.RBIE=1;				// enable port b interrupts again			
-			send_button_press(buttons-1);
+			send_button_press(buttons);
 			buttons=0;
 		}	
 
@@ -261,11 +261,11 @@ void low_isr(void)
 		{
 			if(!PORTBbits.RB5)				// is input pin still low?
 			{
-				temp_buttons=4;
+				temp_buttons=7;
 			}	
 			else if(!PORTBbits.RB4)			// is input pin still low?
 			{
-				temp_buttons=3;
+				temp_buttons=5;
 			}
 			else
 			{
@@ -286,7 +286,7 @@ void low_isr(void)
 		else if(c>30 && c<100)
 		{
 			// got a long press
-			temp_buttons+=4;
+			temp_buttons+=1;
 			c=100;							// go into inter button press period	
 		}	
 		else if (c>105)
