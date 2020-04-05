@@ -110,6 +110,12 @@ void seatalk_parse_next_message(void)
 	float b;
 	float ground_wind_angle;
 	uint8_t seatalk_message_type;
+	uint8_t seatalk_message_byte_2;
+	uint8_t seatalk_message_byte_3;
+	uint8_t seatalk_message_byte_4;
+	uint8_t seatalk_message_byte_5;
+	uint8_t seatalk_message_byte_6;
+	uint8_t seatalk_message_byte_7;
 	uint32_t time_s = timer_get_time_s();
 
 	// now look at next seatalk_messages_in in the seatalk_messages_in list to see if there are any new ones ready to processing
@@ -117,48 +123,54 @@ void seatalk_parse_next_message(void)
 	{
 		seatalk_messages_in[i][0] = MS_READING;
 		seatalk_message_type = seatalk_messages_in[i][1];
+		seatalk_message_byte_2 = seatalk_messages_in[i][2];
+		seatalk_message_byte_3 = seatalk_messages_in[i][3];
+		seatalk_message_byte_4 = seatalk_messages_in[i][4];
+		seatalk_message_byte_5 = seatalk_messages_in[i][5];
+		seatalk_message_byte_6 = seatalk_messages_in[i][6];
+		seatalk_message_byte_7 = seatalk_messages_in[i][7];
 
 		switch (seatalk_message_type)
 		{
 		case SEATALK_APPARENT_WIND_ANGLE:
-			apparent_wind_angle_data = ((float)((((uint16_t)seatalk_messages_in[i][3]) << 8) + seatalk_messages_in[i][4])) / 2.0f;
+			apparent_wind_angle_data = ((float)((((uint16_t)seatalk_message_byte_3) << 8) + seatalk_message_byte_4)) / 2.0f;
 			apparent_wind_angle_time_received = time_s;
 			handler(SEATALK_APPARENT_WIND_ANGLE);
 			break;
 
 		case SEATALK_APPARENT_WIND_SPEED:
-			apparent_wind_speed_data = (float)(seatalk_messages_in[i][3] & 0x7FU) + (float)(seatalk_messages_in[i][4] / 10.0f);
+			apparent_wind_speed_data = (float)(seatalk_message_byte_3 & 0x7FU) + (float)(seatalk_message_byte_4 / 10.0f);
 			apparent_wind_speed_time_received = time_s;
 			handler(SEATALK_APPARENT_WIND_SPEED);
 			break;
 
 		case SEATALK_SOG:
-			speed_over_ground_data = (seatalk_messages_in[i][3] + ((uint16_t)(seatalk_messages_in[i][4]) << 8)) / 10.0f;
+			speed_over_ground_data = (seatalk_message_byte_3 + ((uint16_t)(seatalk_message_byte_4) << 8)) / 10.0f;
 			speed_over_ground_time_received = time_s;
 			handler(SEATALK_SOG);
 			break;
 
 		case SEATALK_COG:
-			course_over_ground_data = ((int16_t)((seatalk_messages_in[i][2] >> 4) & 0x03U)) * 90U;
-			course_over_ground_data += ((int16_t)(seatalk_messages_in[i][3] & 0x3FU) * 2);
-			course_over_ground_data += ((int16_t)(((seatalk_messages_in[i][2] >> 4) & 0x0CU) >> 3));
+			course_over_ground_data = ((int16_t)((seatalk_message_byte_2 >> 4) & 0x03U)) * 90U;
+			course_over_ground_data += ((int16_t)(seatalk_message_byte_3 & 0x3FU) * 2);
+			course_over_ground_data += ((int16_t)(((seatalk_message_byte_2 >> 4) & 0x0CU) >> 3));
 			handler(SEATALK_COG);
 			break;
 
 		case SEATALK_HEADING_MAGNETIC_1:
-			if ((seatalk_messages_in[i][5] & 0x0F) == 0x00U)
+			if ((seatalk_message_byte_5 & 0x0F) == 0x00U)
 			{
 				autopilot_state = APS_STANDBY;
 			}
-			else if ((seatalk_messages_in[i][5] & 0x0F) == 0x02U)
+			else if ((seatalk_message_byte_5 & 0x0F) == 0x02U)
 			{
 				autopilot_state = APS_AUTO;
 			}
-			else if ((seatalk_messages_in[i][5] & 0x0F) == 0x04U)
+			else if ((seatalk_message_byte_5 & 0x0F) == 0x04U)
 			{
 				autopilot_state = APS_VANE;
 			}
-			else if ((seatalk_messages_in[i][5] & 0x0F) == 0x08U)
+			else if ((seatalk_message_byte_5 & 0x0F) == 0x08U)
 			{
 				autopilot_state = APS_TRACK;
 			}
@@ -170,19 +182,19 @@ void seatalk_parse_next_message(void)
 			break;
 
 		case SEATALK_KEYSTROKE:
-			if (seatalk_messages_in[i][3] == 0x01U && seatalk_messages_in[i][4] == 0xfeU)
+			if (seatalk_message_byte_3 == 0x01U && seatalk_message_byte_4 == 0xfeU)
 			{
 				autopilot_command = AUTOPILOT_COMMAND_AUTO;
 			}
-			else if (seatalk_messages_in[i][3] == 0x02U && seatalk_messages_in[i][4] == 0xfdU)
+			else if (seatalk_message_byte_3 == 0x02U && seatalk_message_byte_4 == 0xfdU)
 			{
 				autopilot_command = AUTOPILOT_COMMAND_STANDBY;
 			}
-			else if (seatalk_messages_in[i][3] == 0x03U && seatalk_messages_in[i][4] == 0xfcU)
+			else if (seatalk_message_byte_3 == 0x03U && seatalk_message_byte_4 == 0xfcU)
 			{
 				autopilot_command = AUTOPILOT_COMMAND_TRACK;
 			}
-			else if (seatalk_messages_in[i][3] == 0x23U && seatalk_messages_in[i][4] == 0xdcU)
+			else if (seatalk_message_byte_3 == 0x23U && seatalk_message_byte_4 == 0xdcU)
 			{
 				autopilot_command = AUTOPILOT_COMMAND_VANE;
 			}
@@ -190,59 +202,59 @@ void seatalk_parse_next_message(void)
 			break;
 
 		case SEATALK_HEADING_MAGNETIC_2:
-			heading_magnetic_data = ((int16_t)((seatalk_messages_in[i][2] & 0x30U) >> 4)) * 90U +
-					(seatalk_messages_in[i][3] & 0x3FU) * 2U +
-					(seatalk_messages_in[i][2] & 0xC0U ? ((seatalk_messages_in[i][2] & 0xC0U) == 0xC0U ? 2U : 1U) : 0U);
+			heading_magnetic_data = ((int16_t)((seatalk_message_byte_2 & 0x30U) >> 4)) * 90U +
+					(seatalk_message_byte_3 & 0x3FU) * 2U +
+					(seatalk_message_byte_2 & 0xC0U ? ((seatalk_message_byte_2 & 0xC0U) == 0xC0U ? 2U : 1U) : 0U);
 			heading_magnetic_time_received = time_s;
 			handler(SEATALK_HEADING_MAGNETIC_2);
 			break;
 
 		case SEATALK_DEPTH:
-			depth_data = (float)seatalk_messages_in[i][4];
-			depth_data += ((float)seatalk_messages_in[i][5]) * 256.0f;
+			depth_data = (float)seatalk_message_byte_4;
+			depth_data += ((float)seatalk_message_byte_5) * 256.0f;
 			depth_data /= 32.808f;
 			handler(SEATALK_DEPTH);
 			break;
 
 		case SEATALK_TEMPERATURE:
-			temperature_data = (float)seatalk_messages_in[i][3];
-			temperature_data += ((float)seatalk_messages_in[i][4]) * 256.0f;
+			temperature_data = (float)seatalk_message_byte_3;
+			temperature_data += ((float)seatalk_message_byte_4) * 256.0f;
 			temperature_data -= 100.0f;
 			temperature_data /= 10.0f;
 			handler(SEATALK_TEMPERATURE);
 			break;
 
 		case SEATALK_BOATSPEED:
-			boat_speed_data = (float)seatalk_messages_in[i][3];
-			boat_speed_data += ((float)seatalk_messages_in[i][4]) * 256.0f;
+			boat_speed_data = (float)seatalk_message_byte_3;
+			boat_speed_data += ((float)seatalk_message_byte_4) * 256.0f;
 			boat_speed_data /= 10.0f;
 			boat_speed_time_received = time_s;
 			handler(SEATALK_BOATSPEED);
 			break;
 
 		case SEATALK_TRIPLOG:
-			log_data = (float)seatalk_messages_in[i][3];
-			log_data += ((float)seatalk_messages_in[i][4]) * 256.0f;
-			log_data += ((float)(seatalk_messages_in[i][2] >> 4)) * 65536.0f;
+			log_data = (float)seatalk_message_byte_3;
+			log_data += ((float)seatalk_message_byte_4) * 256.0f;
+			log_data += ((float)(seatalk_message_byte_2 >> 4)) * 65536.0f;
 			log_data /= 10.0f;
-			trip_data = (float)seatalk_messages_in[i][5];
-			trip_data += ((float)seatalk_messages_in[i][6]) * 256.0f;
-			trip_data += ((float)(seatalk_messages_in[i][7] & 0x0fU)) * 65536.0f;
+			trip_data = (float)seatalk_message_byte_5;
+			trip_data += ((float)seatalk_message_byte_6) * 256.0f;
+			trip_data += ((float)(seatalk_message_byte_7 & 0x0fU)) * 65536.0f;
 			trip_data /= 100.0f;
 			handler(SEATALK_TRIPLOG);
 			break;
 
 		case SEATALK_DATE:
-			date_data.year = seatalk_messages_in[i][4];
-			date_data.month = seatalk_messages_in[i][2] >> 4;
-			date_data.date = seatalk_messages_in[i][3];
+			date_data.year = seatalk_message_byte_4;
+			date_data.month = seatalk_message_byte_2 >> 4;
+			date_data.date = seatalk_message_byte_3;
 			handler(SEATALK_DATE);
 			break;
 
 		case SEATALK_GMT:
-			gmt_data.hour = seatalk_messages_in[i][4];
-			gmt_data.minute = (seatalk_messages_in[i][3] & 0xFCU) >> 2;
-			gmt_data.second = ((seatalk_messages_in[i][3] & 0x03U) << 4) + ((seatalk_messages_in[i][2] & 0xf0U) >> 4);
+			gmt_data.hour = seatalk_message_byte_4;
+			gmt_data.minute = (seatalk_message_byte_3 & 0xFCU) >> 2;
+			gmt_data.second = ((seatalk_message_byte_3 & 0x03U) << 4) + ((seatalk_message_byte_2 & 0xf0U) >> 4);
 			if (gmt_data.second > 59)
 			{
 				gmt_data.second = 59;
@@ -251,11 +263,11 @@ void seatalk_parse_next_message(void)
 			break;
 
 		case SEATALK_LATITUDE:
-			latitude_degrees_data = (int16_t)seatalk_messages_in[i][3];
-			latitude_minutes_data = seatalk_messages_in[i][4];
-			latitude_minutes_data += ((uint16_t)(seatalk_messages_in[i][5] & 0x7fU)) << 8;
+			latitude_degrees_data = (int16_t)seatalk_message_byte_3;
+			latitude_minutes_data = seatalk_message_byte_4;
+			latitude_minutes_data += ((uint16_t)(seatalk_message_byte_5 & 0x7fU)) << 8;
 			latitude_minutes_data /= 100.0f;
-			if (seatalk_messages_in[i][5] & 0x80U)
+			if (seatalk_message_byte_5 & 0x80U)
 			{
 				latitude_degrees_data =- latitude_degrees_data;
 				latitude_minutes_data =- latitude_minutes_data;
@@ -264,11 +276,11 @@ void seatalk_parse_next_message(void)
 			break;
 
 		case SEATALK_LONGITUDE:
-			longitude_degrees_data = (int16_t)seatalk_messages_in[i][3];
-			longitude_minutes_data = seatalk_messages_in[i][4];
-			longitude_minutes_data += ((uint16_t)(seatalk_messages_in[i][5] & 0x7fU)) << 8;
+			longitude_degrees_data = (int16_t)seatalk_message_byte_3;
+			longitude_minutes_data = seatalk_message_byte_4;
+			longitude_minutes_data += ((uint16_t)(seatalk_message_byte_5 & 0x7fU)) << 8;
 			longitude_minutes_data /= 100.0f;
-			if (!(seatalk_messages_in[i][5] & 0x80U))
+			if (!(seatalk_message_byte_5 & 0x80U))
 			{
 				longitude_degrees_data = -longitude_degrees_data;
 				longitude_minutes_data = -longitude_minutes_data;
@@ -277,27 +289,27 @@ void seatalk_parse_next_message(void)
 			break;
 
 		case SEATALK_GPS_INFO:
-			if (seatalk_messages_in[i][2] == 0x57U)
+			if (seatalk_message_byte_2 == 0x57U)
 			{
-				altitude_data = seatalk_messages_in[i][6];
-				geoidal_separation_data = 16 * (int16_t)seatalk_messages_in[i][7];
+				altitude_data = seatalk_message_byte_6;
+				geoidal_separation_data = 16 * (int16_t)seatalk_message_byte_7;
 				handler(SEATALK_GPS_INFO);
 
-				if ((seatalk_messages_in[i][3] & 0x10U) == 0x10U)
+				if ((seatalk_message_byte_3 & 0x10U) == 0x10U)
 				{
-					signal_quality_data = seatalk_messages_in[i][3] & 0x0fU;
+					signal_quality_data = seatalk_message_byte_3 & 0x0fU;
 					handler(SEATALK_SIGNAL_QUALITY);
 				}
 
-				if ((seatalk_messages_in[i][4] & 0x80U) == 0x80U)
+				if ((seatalk_message_byte_4 & 0x80U) == 0x80U)
 				{
-					hdop_data = (seatalk_messages_in[i][4] & 0x7cU) >> 2;
+					hdop_data = (seatalk_message_byte_4 & 0x7cU) >> 2;
 					handler(SEATALK_HDOP);
 				}
 
-				if ((seatalk_messages_in[i][4] & 0x02U) == 0x02U)
+				if ((seatalk_message_byte_4 & 0x02U) == 0x02U)
 				{
-					number_of_satellites_data = ((seatalk_messages_in[i][3] & 0xe0U) >> 4) + (seatalk_messages_in[i][4] & 0x01U);
+					number_of_satellites_data = ((seatalk_message_byte_3 & 0xe0U) >> 4) + (seatalk_message_byte_4 & 0x01U);
 					handler(SEATALK_NUMBER_OF_SATS);
 				}
 			}

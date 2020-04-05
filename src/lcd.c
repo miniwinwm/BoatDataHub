@@ -197,14 +197,7 @@ void lcd_init(void)
 {
 	uint8_t i;
 
-	// E = DISABLED
-	GPIO_ResetBits(E_PORT, E_PIN);
-
-	// RS = COMMAND
-	GPIO_ResetBits(RS_PORT, RS_PIN);
-
-	// RW = WRITE
-	GPIO_ResetBits(RW_PORT, RW_PIN);
+	// pins E_PORT:E_PIN, RS_PORT:RS_PIN and RW_PORT:RW_PIN all default to zero on reset so don't need setting here
 
     delay_ms(15U);
     lcd_write_nibble(0x03U);
