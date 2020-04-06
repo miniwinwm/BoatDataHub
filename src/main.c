@@ -1070,7 +1070,10 @@ int main(void)
     // data out via Bluetooth port; all other messages sent to this port are enabled/disabled in 1s timer
     nmea_enable_transmit_message(&nmea_transmit_message_details_VDM);
 
+    // create lcd task request queue
 	lcd_queue_handle = xQueueCreateStatic((UBaseType_t)LCD_QUEUE_CAPACITY, (UBaseType_t)(sizeof(lcd_packet_t)), lcd_queue_buffer, &lcd_queue);
+
+	// create lcd task
 	(void)xTaskCreateStatic(lcd_task,
 			"",
 			LCD_TASK_STACK_SIZE,
@@ -1079,7 +1082,10 @@ int main(void)
 			lcd_stack,
 			&lcd_task_buffer);
 
+	// create pressure sensor task response queue
 	pressure_sensor_queue_handle = xQueueCreateStatic((UBaseType_t)1, (UBaseType_t)(sizeof(float)), pressure_sensor_queue_buffer, &pressure_sensor_queue);
+
+	// create pressur esensor task
 	(void)xTaskCreateStatic(pressure_sensor_task,
 			"",
 			PRESSURE_SENSOR_TASK_STACK_SIZE,
@@ -1088,7 +1094,10 @@ int main(void)
 			pressure_sensor_stack,
 			&pressure_sensor_task_handle);
 
+	// create autopilot task response queue
    	autopilot_remote_queue_handle = xQueueCreateStatic((UBaseType_t)1, (UBaseType_t)(sizeof(uint8_t)), autopilot_remote_queue_buffer, &autopilot_remote_queue);
+
+   	// create autopilot task
    	(void)xTaskCreateStatic(autopilot_remote_task,
    			"",
 			AUTOPILOT_REMOTE_TASK_STACK_SIZE,
@@ -1097,6 +1106,7 @@ int main(void)
 			autopilot_remote_stack,
 			&autopilot_remote_task_buffer);
 
+   	// create main task
    	main_task_handle = xTaskCreateStatic(main_task,
    			"",
 			MAIN_TASK_STACK_SIZE,
@@ -1105,6 +1115,7 @@ int main(void)
 			main_stack,
 			&main_task_buffer);
 
+   	// create 10s timer
 	xTimers[SW_TIMER_10_S] = xTimerCreateStatic(
 			"",
 			(TickType_t)10000,
@@ -1113,6 +1124,7 @@ int main(void)
 			vTimerCallback10s,
 			&(xTimerBuffers[SW_TIMER_10_S]));
 
+	// create 25ms timer
 	xTimers[SW_TIMER_25_MS] = xTimerCreateStatic(
 			"",
 			(TickType_t)25,
@@ -1121,6 +1133,7 @@ int main(void)
 			vTimerCallback25ms,
 			&(xTimerBuffers[SW_TIMER_25_MS]));
 
+	// create 1s timer
 	xTimers[SW_TIMER_1_S] = xTimerCreateStatic(
 			"",
 			(TickType_t)1000,
@@ -1138,24 +1151,33 @@ int main(void)
 
 static void vTimerCallback10s(TimerHandle_t xTimer)
 {
-	float date;
+	float wmm_date;
 	uint32_t time_ms = timer_get_time_ms();
 
 	(void)xTimer;
 
+	// check if a pressur reading is available
     if (xQueueReceive(pressure_sensor_queue_handle, (void *)&pressure_data, (TickType_t)0) == pdTRUE)
     {
+    	// it is, update pressure reading time
     	boat_data_reception_time.pressure_received_time = time_ms;
     }
 
+    // check if it's time to do a wmm calculation and if it is check that required parameters are fresh
 	if (time_ms - boat_data_reception_time.wmm_calculation_time > WMM_CALCULATION_MAX_DATA_AGE &&
 			time_ms - boat_data_reception_time.latitude_received_time < LATITUDE_MAX_DATA_AGE_MS &&
 			time_ms - boat_data_reception_time.longitude_received_time < LONGITUDE_MAX_DATA_AGE_MS &&
 			time_ms - boat_data_reception_time.date_received_time < DATE_MAX_DATA_AGE_MS)
 	{
-		// do a wmm calculation
-		date = wmm_get_date(date_dual_source_data.year, date_dual_source_data.month, date_dual_source_data.date);
-		E0000(latitude_dual_source_data, longitude_dual_source_data, date, &variation_wmm_data);
+		// it's time and every parameter is fresh so do a wmm calculation
+
+		// convert date into format required by wmm
+		wmm_date = wmm_get_date(date_dual_source_data.year, date_dual_source_data.month, date_dual_source_data.date);
+
+		// do the calculation
+		E0000(latitude_dual_source_data, longitude_dual_source_data, wmm_date, &variation_wmm_data);
+
+		// save this calculation time
 		boat_data_reception_time.wmm_calculation_time = time_ms;
 	}
 }
