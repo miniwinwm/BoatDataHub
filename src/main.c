@@ -1085,7 +1085,7 @@ int main(void)
 	// create pressure sensor task response queue
 	pressure_sensor_queue_handle = xQueueCreateStatic((UBaseType_t)1, (UBaseType_t)(sizeof(float)), pressure_sensor_queue_buffer, &pressure_sensor_queue);
 
-	// create pressur esensor task
+	// create pressur sensor task
 	(void)xTaskCreateStatic(pressure_sensor_task,
 			"",
 			PRESSURE_SENSOR_TASK_STACK_SIZE,
