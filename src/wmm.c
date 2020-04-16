@@ -3,7 +3,6 @@
 #include <string.h>
 #include <math.h>
 #include "wmm.h"
-#include "flash.h"
 
 #define PI_CONST 3.14159265359f
 #define RADIANS_TO_DEGREES 0.017453292f
