@@ -690,7 +690,6 @@ void seatalk_autopilot_send(autopilot_command_t autopilot_command)
 	if (autopilot_command == AUTOPILOT_COMMAND_UNKNOWN)
 	{
 		return;
-
 	}
 	seatalk_sentence[0] = SEATALK_KEYSTROKE;
 	seatalk_sentence[1] = 0x11U;
