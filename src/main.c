@@ -891,7 +891,7 @@ static void callback_seatalk_message(uint8_t message_type)
 	case SEATALK_COG:
 	    if (settings_get_gps_from_seatalk())
 	    {
-			course_over_ground_dual_source_data = seatalk_boat_speed_data_retrieve();
+			course_over_ground_dual_source_data = seatalk_course_over_ground_data_retrieve();
 			boat_data_reception_time.course_over_ground_received_time = time_ms;
 	    }
 		break;
@@ -1085,7 +1085,7 @@ int main(void)
 	// create pressure sensor task response queue
 	pressure_sensor_queue_handle = xQueueCreateStatic((UBaseType_t)1, (UBaseType_t)(sizeof(float)), pressure_sensor_queue_buffer, &pressure_sensor_queue);
 
-	// create pressur esensor task
+	// create pressur sensor task
 	(void)xTaskCreateStatic(pressure_sensor_task,
 			"",
 			PRESSURE_SENSOR_TASK_STACK_SIZE,
