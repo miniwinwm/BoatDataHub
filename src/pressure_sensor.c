@@ -69,7 +69,7 @@ static const coefficients_table_entry coefficients_table[] = {{0x88U, (uint8_t *
 		{0x9eU, (uint8_t *)&dig_P9}
 };
 
-static int32_t bmp280_compensate_T_int32(int32_t adc_T);
+static void bmp280_compensate_T_int32(int32_t adc_T);
 static uint32_t bmp280_compensate_P_int64(int32_t adc_P);
 static bool i2c_send(uint8_t address, uint8_t reg, uint8_t data);
 static bool i2c_receive(uint8_t address, uint8_t reg, uint8_t *read_value);
@@ -234,18 +234,14 @@ static bool i2c_receive(uint8_t address, uint8_t reg, uint8_t *read_value)
 	return true;
 }
 
-static int32_t bmp280_compensate_T_int32(int32_t adc_T)
+static void bmp280_compensate_T_int32(int32_t adc_T)
 {
 	int32_t var1;
 	int64_t var2;
-	int64_t T;
 
 	var1 = ((((adc_T >> 3) - ((int32_t)dig_T1 << 1))) * ((int32_t)dig_T2)) >> 11;
 	var2 = (((((adc_T >> 4) - ((int32_t)dig_T1)) * ((adc_T >> 4) - ((int32_t)dig_T1))) >> 12) * ((int32_t)dig_T3)) >> 14;
 	t_fine = var1 + var2;
-	T = ((int64_t)(t_fine * 5L + 128L)) >> 8;
-
-	return T;
 }
 
 static uint32_t bmp280_compensate_P_int64(int32_t adc_P)
@@ -318,7 +314,7 @@ bool pressure_sensor_get_measurement_mb(float *read_measurement)
     adc_T |= ((uint32_t)lsb) << 4;
     adc_T |= ((uint32_t)msb) << 12;
 
-    (void)bmp280_compensate_T_int32((int32_t)adc_T);
+    bmp280_compensate_T_int32((int32_t)adc_T);
 
     if (!i2c_receive(I2C_PRESSURE_SENSOR_ADDRESS, 0xf7U, &msb))
 	{
