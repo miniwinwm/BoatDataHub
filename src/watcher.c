@@ -260,17 +260,20 @@ static void do_watching_state(void)
 			if (settings_get_depth_enabled())
 			{
 				// check depth
-				if (seatalk_depth_data_retrieve() < (((float)settings_get_min_depth()) / 10.0f))
+				if (seatalk_depth_data_retrieve() != 0.0f)	// ignore spurious depth of zero which seatalk sends sometimes
 				{
-					depth_alarm_count++;
-					if (depth_alarm_count > 4U)
+					if (seatalk_depth_data_retrieve() < (((float)settings_get_min_depth()) / 10.0f))
 					{
-						alarm_type = ALARM_DEPTH;
+						depth_alarm_count++;
+						if (depth_alarm_count > 4U)
+						{
+							alarm_type = ALARM_DEPTH;
+						}
 					}
-				}
-				else
-				{
-					depth_alarm_count = 0U;
+					else
+					{
+						depth_alarm_count = 0U;
+					}
 				}
 			}
 
