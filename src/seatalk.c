@@ -190,7 +190,7 @@ void seatalk_parse_next_message(void)
 			{
 				autopilot_command = AUTOPILOT_COMMAND_STANDBY;
 			}
-			else if (seatalk_message_byte_3 == 0x03U && seatalk_message_byte_4 == 0xfcU)
+			else if ((seatalk_message_byte_3 == 0x03U && seatalk_message_byte_4 == 0xfcU) || (seatalk_message_byte_3 == 0x28U && seatalk_message_byte_4 == 0xd7U))
 			{
 				autopilot_command = AUTOPILOT_COMMAND_TRACK;
 			}

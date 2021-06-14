@@ -649,7 +649,7 @@ static void VDM_transmit_callback(void)
 }
 
 /* XDR transmit to OpenCPN */
-static const transmit_message_details_t nmea_transmit_message_details_XDR = {nmea_message_XDR,	PORT_BLUETOOTH, 10000UL, XDR_transmit_callback,	&nmea_message_data_XDR,	(nmea_encoder_function_t)nmea_encode_XDR};
+static const transmit_message_details_t nmea_transmit_message_details_XDR = {nmea_message_XDR,	PORT_BLUETOOTH, 9000UL, XDR_transmit_callback,	&nmea_message_data_XDR,	(nmea_encoder_function_t)nmea_encode_XDR};
 
 static void XDR_transmit_callback(void)
 {
@@ -1156,7 +1156,7 @@ static void vTimerCallback10s(TimerHandle_t xTimer)
 
 	(void)xTimer;
 
-	// check if a pressur reading is available
+	// check if a pressure reading is available
     if (xQueueReceive(pressure_sensor_queue_handle, (void *)&pressure_data, (TickType_t)0) == pdTRUE)
     {
     	// it is, update pressure reading time

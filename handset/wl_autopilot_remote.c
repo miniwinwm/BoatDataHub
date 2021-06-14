@@ -289,7 +289,7 @@ void low_isr(void)
 			temp_buttons+=1;
 			c=100;							// go into inter button press period	
 		}	
-		else if (c>105)
+		else if (c>110)
 		{
 			buttons=temp_buttons;			// signal main loop that a button press has happened
 		}

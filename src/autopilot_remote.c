@@ -33,6 +33,7 @@ SOFTWARE.
 #include "buzzer.h"
 #include "autopilot_remote.h"
 #include "main.h"
+#include "seatalk.h"
 
 static QueueHandle_t autopilot_remote_queue_handle;
 static TaskHandle_t this_task_handle;
@@ -112,6 +113,15 @@ void autopilot_remote_task(void *parameters)
 
     	// read the data from the radio chip
     	(void)nrf24l01_read_rx_payload((uint8_t *)&autopilot_remote_data, 1U);
+
+    	if (autopilot_remote_data == AUTOPILOT_COMMAND_MINUS_10 || autopilot_remote_data == AUTOPILOT_COMMAND_PLUS_10)
+    	{
+    		// double buzz for +-10 commands
+        	vTaskDelay((TickType_t)25);
+        	buzzer_on();
+        	vTaskDelay((TickType_t)5);
+        	buzzer_off();
+    	}
 
 		// acknowledge the interrupt on the radio chip
 		nrf24l01_irq_clear_all();

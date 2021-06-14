@@ -265,7 +265,7 @@ static void do_watching_state(void)
 					if (seatalk_depth_data_retrieve() < (((float)settings_get_min_depth()) / 10.0f))
 					{
 						depth_alarm_count++;
-						if (depth_alarm_count > 4U)
+						if (depth_alarm_count > 10U)
 						{
 							alarm_type = ALARM_DEPTH;
 						}
